@@ -1,0 +1,15 @@
+.outputs/
+.idea/
+.vscode/
+.trash/
+.ipynb_checkpoints
+outputs
+checkpoints
+notebooks
+*.whl
+plots
+output
+amlt
+.debug
+uv_verl
+wandb

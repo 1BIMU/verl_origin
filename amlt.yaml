@@ -1,0 +1,61 @@
+# https://amulet-docs.azurewebsites.net/main/config_file.html
+
+description: wty
+
+target:
+  service: sing
+  workspace_name: Workspace_NLC
+
+  ## amlt target info sing
+  # name: msrresrchvc                       # 8xA100-80G4, 32xA100-80G4, premium/basic
+  # resource_group: gcr-singularity-resrch  # 8xA100-80G4, 32xA100-80G4, premium/basic
+  name: msrresrchbasicvc                  # 8xH100-80G8/64XA100-80G4/128XA100-40G4, standard/basic
+  resource_group: gcr-singularity         # 8xH100-80G8/64XA100-80G4/128XA100-40G4, standard/basic
+
+
+environment:
+  # image: amlt-sing/acpt-torch2.6.0-py3.10-cuda12.6-ubuntu22.04   # amlt cache base-images
+  image: amlt-sing/acpt-torch2.7.1-py3.10-cuda12.6-ubuntu22.04  # amlt cache base-images
+  setup:
+  - echo "master_addr:" "$$MASTER_ADDR"
+  - echo "master_port:" $$MASTER_PORT
+  - echo "node_rank:" $$OMPI_COMM_WORLD_RANK
+  - sudo apt install tmux
+  - sudo apt update
+  - sudo apt install openssh-server -y
+  - sudo service ssh start
+  - sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq
+  - sudo chmod +x /usr/local/bin/yq
+  - pip install nvitop
+  - sudo apt install unzip
+
+
+code:
+  local_dir: $CONFIG_DIR
+
+storage:
+  yixiali:
+    storage_account_name: msranlpintern
+    container_name: yixiali
+
+search:
+    job_template:
+        name: "wty_{SCRIPT}"
+        sku: 80G4-A100
+        priority: High
+        sla_tier: Basic
+        command:
+        - export WANDB_API_KEY=3fd0bf1397e6ce0747cce6ae6c3f0fb7980eb1f5
+        - bash uv_verl.sh
+        - bash {SCRIPT}
+    type: grid
+    max_trials: 500
+    params:
+        - name: SCRIPT
+          spec: discrete
+          values: [
+            "run_qwen1.5B_PPO_GAE.sh",
+            ]
+
+
+# amlt run amlt.yaml
