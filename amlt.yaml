@@ -43,7 +43,7 @@ search:
         name: "wty_{SCRIPT}"
         sku: 80G4-A100
         priority: High
-        sla_tier: Basic
+        sla_tier: Standard
         command:
         - export WANDB_API_KEY=3fd0bf1397e6ce0747cce6ae6c3f0fb7980eb1f5
         - bash uv_verl.sh
@@ -54,7 +54,8 @@ search:
         - name: SCRIPT
           spec: discrete
           values: [
-            "run_qwen1.5B_PPO_GAE.sh",
+            # "run_qwen1.5B_PPO_GAE.sh",
+            "run_ds1.5B_PPO_GAE.sh",
             ]
 
 
