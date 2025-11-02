@@ -15,7 +15,7 @@ python3 -m verl.trainer.main_ppo \
     data.train_files="$train_files" \
     data.val_files="$test_files" \
     data.train_batch_size=256 \
-    data.shuffle=False \
+    data.shuffle=True \
     data.trust_remote_code=True \
     data.max_prompt_length=1024 \
     data.max_response_length=8192 \
