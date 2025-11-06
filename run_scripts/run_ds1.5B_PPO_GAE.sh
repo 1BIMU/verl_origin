@@ -69,3 +69,5 @@ python3 -m verl.trainer.main_ppo \
     trainer.test_freq=10 \
     trainer.val_before_train=True \
     trainer.total_training_steps=500 $@
+
+
