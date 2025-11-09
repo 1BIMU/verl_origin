@@ -41,9 +41,9 @@ storage:
 search:
     job_template:
         name: "wty_{SCRIPT}"
-        sku: 80G4-A100
+        sku: 80G4-H100
         priority: High
-        sla_tier: Standard
+        sla_tier: standard
         command:
         - export WANDB_API_KEY=3fd0bf1397e6ce0747cce6ae6c3f0fb7980eb1f5
         - bash uv_verl.sh
@@ -55,7 +55,11 @@ search:
           spec: discrete
           values: [
             # "run_qwen1.5B_PPO_GAE.sh",
-            "run_ds1.5B_PPO_GAE.sh",
+            # "run_ds1.5B_PPO_GAE.sh",
+            # "run_ds1.5B_PPO_grpo.sh",
+            # "run_ds1.5B_PPO_grpo_shuffle.sh",
+            # "run_scripts/run_ds1.5B_PPO_GAE_128.sh",
+            "run_scripts/run_ds1.5B_PPO_grpo_shuffle_64.sh",
             ]
 
 
