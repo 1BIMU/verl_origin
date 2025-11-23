@@ -27,6 +27,10 @@ python3 -m verl.trainer.main_ppo \
     actor_rollout_ref.actor.kl_loss_coef=0.001 \
     actor_rollout_ref.actor.kl_loss_type=mse \
     actor_rollout_ref.actor.entropy_coeff=0 \
+    actor_rollout_ref.rollout.max_num_batched_tokens=24576 \
+    actor_rollout_ref.rollout.max_model_len=9216 \
+    actor_rollout_ref.rollout.enforce_eager=True \
+    data.trust_remote_code=True \
     actor_rollout_ref.model.enable_gradient_checkpointing=True \
     actor_rollout_ref.actor.fsdp_config.param_offload=False \
     actor_rollout_ref.actor.fsdp_config.optimizer_offload=False \
