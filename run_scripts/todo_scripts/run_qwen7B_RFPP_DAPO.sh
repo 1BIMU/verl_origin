@@ -2,7 +2,7 @@ set -x
 
 source uv_verl/bin/activate
 
-train_path=data/deepscaler-math.parquet
+train_path=data/dapo-math-17k_dedup.parquet
 aime_test_path=data/offline_eval/math__aime_repeated_8x_240.parquet
 math_test_path=data/offline_eval/math__math_500.parquet
 
