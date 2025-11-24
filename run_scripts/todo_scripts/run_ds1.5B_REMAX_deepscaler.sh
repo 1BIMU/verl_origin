@@ -22,6 +22,7 @@ python3 -m verl.trainer.main_ppo \
     actor_rollout_ref.actor.optim.lr=1e-6 \
     actor_rollout_ref.model.use_remove_padding=True \
     actor_rollout_ref.rollout.max_num_batched_tokens=24576 \
+    actor_rollout_ref.rollout.temperature=0.6 \
     actor_rollout_ref.rollout.max_model_len=9216 \
     actor_rollout_ref.rollout.enforce_eager=True \
     data.trust_remote_code=True \
