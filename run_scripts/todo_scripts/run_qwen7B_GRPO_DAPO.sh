@@ -17,7 +17,7 @@ python3 -m verl.trainer.main_ppo \
     data.train_batch_size=512 \
     data.shuffle=True \
     data.trust_remote_code=True \
-    data.max_prompt_length=1024 \
+    data.max_prompt_length=2048 \
     data.max_response_length=8192 \
     data.filter_overlong_prompts=False \
     data.truncation='error' \

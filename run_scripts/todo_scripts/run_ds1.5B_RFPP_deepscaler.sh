@@ -7,7 +7,7 @@ aime_test_path=data/offline_eval/math__aime_repeated_8x_240.parquet
 math_test_path=data/offline_eval/math__math_500.parquet
 
 train_files="['$train_path']"
-test_files="['$aime_test_path', '$math_test_path']"run
+test_files="['$aime_test_path', '$math_test_path']"
 
 python3 -m verl.trainer.main_ppo \
     algorithm.adv_estimator=reinforce_plus_plus_baseline \
