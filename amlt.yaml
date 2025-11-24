@@ -41,7 +41,7 @@ storage:
 search:
     job_template:
         name: "wty_{SCRIPT}"
-        sku: 80G4-H100
+        sku: 80G8-A100
         priority: High
         sla_tier: standard
         command:
@@ -57,10 +57,22 @@ search:
             # "run_qwen1.5B_PPO_GAE.sh",
             # "run_ds1.5B_PPO_GAE.sh",
             # "run_ds1.5B_PPO_grpo.sh",
-            # "run_ds1.5B_PPO_grpo_shuffle.sh",
+            # "run_scripts/run_ds1.5B_PPO_grpo_shuffle.sh",
             # "run_scripts/run_ds1.5B_PPO_GAE_128.sh",
-            "run_scripts/run_ds1.5B_PPO_grpo_shuffle_64.sh",
+            # "run_scripts/run_ds1.5B_PPO_grpo_shuffle_64.sh",
+
+            ## noble-fawn
+            # "run_scripts/todo_scripts/run_ds1.5B_REMAX_deepscaler.sh",
+            # "run_scripts/todo_scripts/run_ds1.5B_RFPP_deepscaler.sh", # failed
+            # "run_scripts/todo_scripts/run_ds1.5B_RLOO_deepscaler.sh",
+
+            ## social-llama
+            "run_scripts/todo_scripts/run_qwen7B_GRPO_DAPO.sh", # failed
+            "run_scripts/todo_scripts/run_qwen7B_PPO_DAPO.sh",
+            "run_scripts/todo_scripts/run_qwen7B_REMAX_DAPO.sh",
+            "run_scripts/todo_scripts/run_qwen7B_RFPP_DAPO.sh", # failed
+            "run_scripts/todo_scripts/run_qwen7B_RLOO_DAPO.sh",
             ]
 
 
-# amlt run amlt.yaml
+# amlt run verl_origin/amlt.yaml
