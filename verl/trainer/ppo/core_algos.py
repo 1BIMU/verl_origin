@@ -23,7 +23,7 @@ __all__ = ["register_adv_est", "get_adv_estimator_fn", "AdvantageEstimator"]
 from collections import defaultdict
 from enum import Enum
 from typing import Any, Callable, Optional
-
+import torch.nn.functional as F
 import numpy as np
 import torch
 from omegaconf import DictConfig
@@ -256,6 +256,7 @@ def compute_gae_advantage_return(
         advantages = torch.stack(advantages_reversed[::-1], dim=1)
 
         returns = advantages + values
+        returns = torch.clamp(returns, 0.0, 1.0)
         advantages = verl_F.masked_whiten(advantages, response_mask)
     return advantages, returns
 
@@ -1347,46 +1348,43 @@ def compute_entropy_loss(logits, response_mask, loss_agg_mode: str = "token-mean
 
 
 def compute_value_loss(
-    vpreds: torch.Tensor,
-    returns: torch.Tensor,
-    values: torch.Tensor,
+    vpreds: torch.Tensor,       # 新模型的输出 (Logits)
+    returns: torch.Tensor,      # 训练目标 (0-1之间的概率/标签)
+    values: torch.Tensor,       # 旧模型的预测值 (0-1之间的概率，从Buffer里取的)
     response_mask: torch.Tensor,
     cliprange_value: float,
     loss_agg_mode: str = "token-mean",
 ):
     """
-    Compute the clipped value-function loss for PPO.
-
-    Copied from https://github.com/huggingface/trl/blob/main/trl/trainer/ppo_trainer.py#L1151
-
-    Args:
-        vpreds (torch.FloatTensor):
-            Predicted values from the value head, shape (batch_size, response_length).
-        values (torch.FloatTensor):
-            Old (baseline) values from the value head, shape (batch_size, response_length).
-        returns (torch.FloatTensor):
-            Ground-truth returns, shape (batch_size, response_length).
-        response_mask (torch.Tensor):
-            Mask indicating which tokens to include in the value loss calculation.
-        cliprange_value (float):
-            Clip range for value prediction updates.
-        loss_agg_mode (str, optional):
-            Aggregation mode for `agg_loss`. Defaults to "token-mean".
-
-    Returns:
-        vf_loss (torch.FloatTensor):
-            A scalar tensor containing the aggregated value-function loss.
-        vf_clipfrac (float):
-            Fraction of elements where the clipped loss was used.
+    修改版: 使用 BCE Loss 替代 MSE Loss
     """
-    vpredclipped = verl_F.clip_by_value(vpreds, values - cliprange_value, values + cliprange_value)
-    vf_losses1 = (vpreds - returns) ** 2
-    vf_losses2 = (vpredclipped - returns) ** 2
+    # 1. 确保 returns 在 [0, 1] 之间 (为了 BCE 数值安全)
+    returns = torch.clamp(returns, 0.0, 1.0)
+    
+    # 2. 将 Logits 转为 概率 (用于 Clipping)
+    vpreds_probs = torch.sigmoid(vpreds)
+    
+    # 3. 在概率空间进行 PPO Clipping
+    # 限制新的预测概率不能偏离旧概率太远
+    vpredclipped_probs = torch.clamp(vpreds_probs, values - cliprange_value, values + cliprange_value)
+    vpredclipped_probs = torch.clamp(vpredclipped_probs, 0.0, 1.0) # 再次确保不越界
+
+    # 4. 计算两个 Loss (BCE)
+    # Loss 1: 原始 Logits 的 BCE (数值更稳定)
+    vf_losses1 = F.binary_cross_entropy_with_logits(vpreds, returns, reduction='none')
+    
+    # Loss 2: Clipped Probability 的 BCE
+    # 注意: 这里输入已经是概率了，所以用 binary_cross_entropy
+    vf_losses2 = F.binary_cross_entropy(vpredclipped_probs, returns, reduction='none')
+
+    # 5. 取 Max (PPO 的悲观界限)
     clipped_vf_losses = torch.max(vf_losses1, vf_losses2)
+
+    # 6. 聚合 Loss
     vf_loss = 0.5 * agg_loss(loss_mat=clipped_vf_losses, loss_mask=response_mask, loss_agg_mode=loss_agg_mode)
     vf_clipfrac = verl_F.masked_mean(torch.gt(vf_losses2, vf_losses1).float(), response_mask)
+    
     return vf_loss, vf_clipfrac
-
 
 def kl_penalty(logprob: torch.FloatTensor, ref_logprob: torch.FloatTensor, kl_penalty) -> torch.FloatTensor:
     """Compute KL divergence given logprob and ref_logprob. Optionally using straight through to bind k2 on other

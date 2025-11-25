@@ -175,7 +175,9 @@ class DataParallelPPOCritic(BasePPOCritic):
             micro_batch = micro_batch.to(get_device_id())
             model_inputs = {**micro_batch.batch, **micro_batch.non_tensor_batch}
             with torch.no_grad():
-                values = self._forward_micro_batch(model_inputs)
+                values_logits = self._forward_micro_batch(model_inputs)
+                # [修改点]: 在存入 Buffer 之前，转为 Probabilities
+                values = torch.sigmoid(values_logits)
             values_lst.append(values)
         values = torch.concat(values_lst, dim=0)
 
