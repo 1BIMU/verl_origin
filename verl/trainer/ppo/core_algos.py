@@ -1358,9 +1358,18 @@ def compute_value_loss(
     """
     修改版: 使用 BCE Loss 替代 MSE Loss
     """
+    # ================= [强制类型修复 START] =================
+    # 这一步是修复报错的关键！
+    # 无论 returns 原始是什么类型，强制转为和 vpreds (模型输出) 一样的类型
+    if returns.dtype != vpreds.dtype:
+        returns = returns.to(dtype=vpreds.dtype)
+    
+    # values 也需要转换，否则后面的 clipping 计算可能会导致类型升级回 float32
+    if values.dtype != vpreds.dtype:
+        values = values.to(dtype=vpreds.dtype)
+    # ================= [强制类型修复 END] =================
     # 1. 确保 returns 在 [0, 1] 之间 (为了 BCE 数值安全)
     returns = torch.clamp(returns, 0.0, 1.0)
-    
     # 2. 将 Logits 转为 概率 (用于 Clipping)
     vpreds_probs = torch.sigmoid(vpreds)
     
