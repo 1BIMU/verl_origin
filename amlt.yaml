@@ -61,17 +61,22 @@ search:
             # "run_scripts/run_ds1.5B_PPO_GAE_128.sh",
             # "run_scripts/run_ds1.5B_PPO_grpo_shuffle_64.sh",
 
-            ## noble-fawn
+            # ## moving-mastiff, 4gpus, running
             # "run_scripts/todo_scripts/run_ds1.5B_REMAX_deepscaler.sh",
-            # "run_scripts/todo_scripts/run_ds1.5B_RFPP_deepscaler.sh", # failed
+            # "run_scripts/todo_scripts/run_ds1.5B_RFPP_deepscaler.sh",
             # "run_scripts/todo_scripts/run_ds1.5B_RLOO_deepscaler.sh",
 
-            ## social-llama
-            "run_scripts/todo_scripts/run_qwen7B_GRPO_DAPO.sh", # failed
-            "run_scripts/todo_scripts/run_qwen7B_PPO_DAPO.sh",
-            "run_scripts/todo_scripts/run_qwen7B_REMAX_DAPO.sh",
-            "run_scripts/todo_scripts/run_qwen7B_RFPP_DAPO.sh", # failed
-            "run_scripts/todo_scripts/run_qwen7B_RLOO_DAPO.sh",
+            # ## social-llama, 8gpus
+
+            # "run_scripts/todo_scripts/run_qwen7B_REMAX_DAPO.sh",
+            # "run_scripts/todo_scripts/run_qwen7B_RLOO_DAPO.sh",
+
+            ## natural-worm, 8gpus
+            # "run_scripts/todo_scripts/run_qwen7B_GRPO_DAPO.sh",
+
+            ## becoming-asp, 8gpus
+            "run_scripts/todo_scripts/run_qwen7B_PPO_DAPO.sh",  # break, rerunning
+            "run_scripts/todo_scripts/run_qwen7B_RFPP_DAPO.sh", # not flashattn2, rerunning
             ]
 
 
