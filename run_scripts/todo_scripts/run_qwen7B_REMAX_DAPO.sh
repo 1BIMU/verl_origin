@@ -13,7 +13,7 @@ python3 -m verl.trainer.main_ppo \
     algorithm.adv_estimator=remax \
     data.train_files="$train_files" \
     data.val_files="$test_files" \
-    data.train_batch_size=128 \
+    data.train_batch_size=512 \
     data.max_prompt_length=1024 \
     data.max_response_length=8192 \
     data.filter_overlong_prompts=True \
@@ -26,7 +26,7 @@ python3 -m verl.trainer.main_ppo \
     actor_rollout_ref.rollout.max_model_len=9216 \
     actor_rollout_ref.rollout.enforce_eager=True \
     data.trust_remote_code=True \
-    actor_rollout_ref.actor.ppo_mini_batch_size=64 \
+    actor_rollout_ref.actor.ppo_mini_batch_size=32 \
     actor_rollout_ref.actor.use_dynamic_bsz=True \
     actor_rollout_ref.actor.ppo_max_token_len_per_gpu=24000 \
     actor_rollout_ref.actor.use_kl_loss=False \
@@ -49,6 +49,6 @@ python3 -m verl.trainer.main_ppo \
     trainer.val_before_train=False \
     trainer.n_gpus_per_node=4 \
     trainer.nnodes=1 \
-    trainer.save_freq=2 \
-    trainer.test_freq=10 \
+    trainer.save_freq=10 \
+    trainer.test_freq=2 \
     trainer.total_training_steps=200 $@

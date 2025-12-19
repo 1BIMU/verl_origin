@@ -17,7 +17,7 @@ python3 -m verl.trainer.main_ppo \
     data.train_batch_size=512 \
     data.shuffle=True \
     data.trust_remote_code=True \
-    data.max_prompt_length=2048 \
+    data.max_prompt_length=1024 \
     data.max_response_length=8192 \
     data.filter_overlong_prompts=False \
     data.truncation='left' \
@@ -35,9 +35,9 @@ python3 -m verl.trainer.main_ppo \
     actor_rollout_ref.actor.use_kl_loss=False \
     actor_rollout_ref.actor.use_dynamic_bsz=False \
     actor_rollout_ref.actor.ppo_mini_batch_size=32 \
-    actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=2 \
+    actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=1 \
     actor_rollout_ref.rollout.log_prob_use_dynamic_bsz=False \
-    actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=2 \
+    actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=1 \
     actor_rollout_ref.rollout.do_sample=True \
     actor_rollout_ref.rollout.temperature=1 \
     actor_rollout_ref.rollout.val_kwargs.do_sample=True \
@@ -62,9 +62,9 @@ python3 -m verl.trainer.main_ppo \
     trainer.project_name='WTY_PPO' \
     trainer.experiment_name='PPO-R1_DAPO-17k' \
     trainer.default_local_dir='/mnt/yixiali/CODES/WTY/verlSQ/outputs/ckpt/${trainer.project_name}/${trainer.experiment_name}_4_gpus_h100' \
-    trainer.n_gpus_per_node=8 \
+    trainer.n_gpus_per_node=4 \
     trainer.nnodes=1 \
-    trainer.save_freq=1 \
+    trainer.save_freq=10 \
     trainer.test_freq=2 \
     trainer.val_before_train=True \
     trainer.total_training_steps=200 $@
