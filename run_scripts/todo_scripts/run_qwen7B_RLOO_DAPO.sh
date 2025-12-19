@@ -41,7 +41,7 @@ python3 -m verl.trainer.main_ppo \
     algorithm.use_kl_in_reward=True \
     algorithm.kl_penalty=kl \
     algorithm.kl_ctrl.kl_coef=0.001 \
-    actor_rollout_ref.rollout.temperature=1 \
+    actor_rollout_ref.rollout.temperature=0.6 \
     trainer.critic_warmup=0 \
     trainer.logger='["console","wandb"]' \
     trainer.project_name='WTY_PPO' \

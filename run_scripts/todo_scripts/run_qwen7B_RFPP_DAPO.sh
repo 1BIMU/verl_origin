@@ -28,7 +28,8 @@ python3 -m verl.trainer.main_ppo \
     actor_rollout_ref.actor.kl_loss_type=mse \
     actor_rollout_ref.actor.entropy_coeff=0 \
     actor_rollout_ref.rollout.max_num_batched_tokens=16384 \
-    actor_rollout_ref.rollout.temperature=1 \
+    actor_rollout_ref.rollout.temperature=0.6 \
+    actor_rollout_ref.rollout.val_kwargs.temperature=0.6 \
     actor_rollout_ref.rollout.max_model_len=9216 \
     actor_rollout_ref.rollout.enforce_eager=True \
     data.trust_remote_code=True \
