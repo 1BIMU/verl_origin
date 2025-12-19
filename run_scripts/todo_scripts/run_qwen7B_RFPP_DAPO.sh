@@ -47,7 +47,7 @@ python3 -m verl.trainer.main_ppo \
     trainer.logger='["console","wandb"]' \
     trainer.default_local_dir='/mnt/yixiali/CODES/WTY/verlSQ/outputs/ckpt/${trainer.project_name}/${trainer.experiment_name}_4_gpus_h100' \
     trainer.project_name='WTY_PPO' \
-    trainer.experiment_name='qwen7B_RFPP_DAPO' \
+    trainer.experiment_name='R1-7B_RFPP_DAPO' \
     trainer.n_gpus_per_node=4 \
     trainer.nnodes=1 \
     trainer.save_freq=2 \

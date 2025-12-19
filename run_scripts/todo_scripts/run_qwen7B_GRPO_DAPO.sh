@@ -51,7 +51,7 @@ python3 -m verl.trainer.main_ppo \
     trainer.critic_warmup=0 \
     trainer.logger='["console","wandb"]' \
     trainer.project_name='WTY_PPO' \
-    trainer.experiment_name='GRPO-Qwen2.5-7B_DAPO-17k' \
+    trainer.experiment_name='GRPO-R1-7B_DAPO-17k' \
     trainer.default_local_dir='/mnt/yixiali/CODES/WTY/verlSQ/outputs/ckpt/${trainer.project_name}/${trainer.experiment_name}_4_gpus_h100' \
     trainer.n_gpus_per_node=8 \
     trainer.nnodes=1 \
