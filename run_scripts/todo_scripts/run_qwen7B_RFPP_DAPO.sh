@@ -17,7 +17,7 @@ python3 -m verl.trainer.main_ppo \
     data.max_prompt_length=1024 \
     data.max_response_length=8192 \
     data.filter_overlong_prompts=True \
-    data.truncation='error' \
+    data.truncation='left' \
     actor_rollout_ref.model.path=deepseek-ai/DeepSeek-R1-Distill-Qwen-7B \
     actor_rollout_ref.actor.optim.lr=3e-6 \
     actor_rollout_ref.model.use_remove_padding=True \
