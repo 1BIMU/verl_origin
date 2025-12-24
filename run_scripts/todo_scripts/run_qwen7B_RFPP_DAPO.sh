@@ -14,8 +14,8 @@ python3 -m verl.trainer.main_ppo \
     data.train_files="$train_files" \
     data.val_files="$test_files" \
     data.train_batch_size=512 \
-    data.max_prompt_length=1024 \
-    data.max_response_length=8192 \
+    data.max_prompt_length=2048 \
+    data.max_response_length=16384 \
     data.filter_overlong_prompts=True \
     data.truncation='left' \
     actor_rollout_ref.model.path=deepseek-ai/DeepSeek-R1-Distill-Qwen-7B \
@@ -27,10 +27,10 @@ python3 -m verl.trainer.main_ppo \
     actor_rollout_ref.actor.kl_loss_coef=0.001 \
     actor_rollout_ref.actor.kl_loss_type=mse \
     actor_rollout_ref.actor.entropy_coeff=0 \
-    actor_rollout_ref.rollout.max_num_batched_tokens=16384 \
+    actor_rollout_ref.rollout.max_num_batched_tokens=32768 \
     actor_rollout_ref.rollout.temperature=0.6 \
     actor_rollout_ref.rollout.val_kwargs.temperature=0.6 \
-    actor_rollout_ref.rollout.max_model_len=9216 \
+    actor_rollout_ref.rollout.max_model_len=20480 \
     actor_rollout_ref.rollout.enforce_eager=True \
     data.trust_remote_code=True \
     actor_rollout_ref.model.enable_gradient_checkpointing=True \
@@ -48,7 +48,7 @@ python3 -m verl.trainer.main_ppo \
     trainer.logger='["console","wandb"]' \
     trainer.default_local_dir='/mnt/yixiali/CODES/WTY/verlSQ/outputs/ckpt/${trainer.project_name}/${trainer.experiment_name}_4_gpus_h100' \
     trainer.project_name='WTY_PPO' \
-    trainer.experiment_name='R1-7B_RFPP_DAPO' \
+    trainer.experiment_name='R1-7B_RFPP_DAPO_16kcontext' \
     trainer.n_gpus_per_node=4 \
     trainer.nnodes=1 \
     trainer.save_freq=10 \

@@ -17,8 +17,8 @@ python3 -m verl.trainer.main_ppo \
     data.train_batch_size=512 \
     data.shuffle=True \
     data.trust_remote_code=True \
-    data.max_prompt_length=1024 \
-    data.max_response_length=8192 \
+    data.max_prompt_length=2048 \
+    data.max_response_length=16384 \
     data.filter_overlong_prompts=False \
     data.truncation='left' \
     actor_rollout_ref.model.path=deepseek-ai/DeepSeek-R1-Distill-Qwen-7B  \
@@ -43,7 +43,8 @@ python3 -m verl.trainer.main_ppo \
     actor_rollout_ref.rollout.temperature=0.6 \
     actor_rollout_ref.rollout.val_kwargs.do_sample=True \
     actor_rollout_ref.rollout.val_kwargs.temperature=0.6 \
-    actor_rollout_ref.rollout.max_num_batched_tokens=16384 \
+    actor_rollout_ref.rollout.max_num_batched_tokens=32768 \
+    actor_rollout_ref.rollout.max_model_len=20480 \
     actor_rollout_ref.rollout.enforce_eager=True \
     actor_rollout_ref.rollout.tensor_model_parallel_size=4 \
     actor_rollout_ref.rollout.name=vllm \
@@ -51,7 +52,7 @@ python3 -m verl.trainer.main_ppo \
     trainer.critic_warmup=0 \
     trainer.logger='["console","wandb"]' \
     trainer.project_name='WTY_PPO' \
-    trainer.experiment_name='GRPO-R1-7B_DAPO-17k' \
+    trainer.experiment_name='GRPO-R1-7B_DAPO-17k_16kcontext' \
     trainer.default_local_dir='/mnt/yixiali/CODES/WTY/verlSQ/outputs/ckpt/${trainer.project_name}/${trainer.experiment_name}_4_gpus_h100' \
     trainer.n_gpus_per_node=4 \
     trainer.nnodes=1 \
