@@ -13,7 +13,7 @@ from verl.utils.reward_score import default_compute_score
 
 
 DATASET_REGISTRY = {
-    "bbh": "~/data/bbh/bbh_all.parquet",
+    "bbh": "data/offline_eval/bbh__all.parquet",
     "humaneval": "data/offline_eval/code__humaneval.parquet",
     "mbpp": "data/offline_eval/code__mbpp.parquet",
     "livecodebench": "data/offline_eval/code__livecodebench.parquet",

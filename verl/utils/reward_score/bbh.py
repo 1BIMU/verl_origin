@@ -22,6 +22,7 @@ def extract_answer(response: str) -> str:
 def normalize_answer(answer: str) -> str:
     answer = answer.lower()
     answer = " ".join(answer.split())
+    answer = re.sub(r"^\([a-z]\)\s*", "", answer)
     answer = re.sub(r"[^\w\s]", "", answer)
     return answer.strip()
 
