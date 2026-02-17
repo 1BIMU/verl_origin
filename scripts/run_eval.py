@@ -29,7 +29,7 @@ def get_dataset_path(name):
     return os.path.expanduser(name)
 
 
-def run_generation(model_path, data_path, output_path, n_samples, n_gpus, batch_size, temperature, response_length):
+def run_generation(model_path, data_path, output_path, n_samples, n_gpus, batch_size, temperature, response_length, prompt_length):
     cmd = [
         sys.executable, "-m", "verl.trainer.main_generation",
         f"model.path={model_path}",
@@ -39,9 +39,9 @@ def run_generation(model_path, data_path, output_path, n_samples, n_gpus, batch_
         f"data.batch_size={batch_size}",
         f"trainer.n_gpus_per_node={n_gpus}",
         f"rollout.temperature={temperature}",
-        "rollout.top_p=0.95",
-        "rollout.prompt_length=2048",
+        f"rollout.prompt_length={prompt_length}",
         f"rollout.response_length={response_length}",
+        "+rollout.pipeline_model_parallel_size=1",
     ]
     print(f"Running: {' '.join(cmd)}")
     subprocess.run(cmd, check=True)
@@ -95,19 +95,6 @@ def run_accuracy_eval(data_path, sandbox_url=None):
     }
 
 
-def run_self_correction_eval(data_path, output_path, model, max_workers, sample_size):
-    cmd = [
-        sys.executable, "scripts/llm_judge_self_correction.py",
-        f"--input_path={data_path}",
-        f"--output_path={output_path}",
-        f"--model={model}",
-        f"--max_workers={max_workers}",
-    ]
-    if sample_size:
-        cmd.append(f"--sample_size={sample_size}")
-    subprocess.run(cmd, check=True)
-
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_path", type=str, required=True)
@@ -116,18 +103,16 @@ def main():
     parser.add_argument("--output_dir", type=str, default="./output/eval")
     parser.add_argument("--n_gpus", type=int, default=8)
     parser.add_argument("--batch_size", type=int, default=64)
-    parser.add_argument("--temperature", type=float, default=0.7)
-    parser.add_argument("--response_length", type=int, default=2048)
+    parser.add_argument("--temperature", type=float, default=0.6)
+    parser.add_argument("--prompt_length", type=int, default=1024)
+    parser.add_argument("--response_length", type=int, default=8192)
     parser.add_argument("--sandbox_url", type=str, default=None, help="Sandbox URL for code execution")
     parser.add_argument("--skip_generation", action="store_true")
     parser.add_argument("--skip_accuracy", action="store_true")
-    parser.add_argument("--skip_self_correction", action="store_true")
-    parser.add_argument("--llm_judge_model", type=str, default="gpt-4o-mini")
-    parser.add_argument("--llm_judge_workers", type=int, default=10)
-    parser.add_argument("--llm_judge_sample_size", type=int, default=None)
     args = parser.parse_args()
 
-    output_dir = os.path.expanduser(args.output_dir)
+    model_name = os.path.basename(args.model_path.rstrip("/"))
+    output_dir = os.path.expanduser(os.path.join(args.output_dir, model_name))
     os.makedirs(output_dir, exist_ok=True)
 
     print("=== Evaluation Pipeline ===")
@@ -150,7 +135,6 @@ def main():
 
         safe_name = dataset_name.replace("/", "_").replace("~", "")
         generation_output = os.path.join(output_dir, f"{safe_name}_generation.parquet")
-        self_correction_output = os.path.join(output_dir, f"{safe_name}_self_correction.json")
 
         if not args.skip_generation:
             print(f"\n--- Generation ---")
@@ -163,22 +147,13 @@ def main():
                 batch_size=args.batch_size,
                 temperature=args.temperature,
                 response_length=args.response_length,
+                prompt_length=args.prompt_length,
             )
 
         if not args.skip_accuracy:
             print(f"\n--- Accuracy Evaluation ---")
             accuracy_results = run_accuracy_eval(generation_output, sandbox_url=args.sandbox_url)
             all_results[dataset_name] = {"accuracy": accuracy_results}
-
-        if not args.skip_self_correction and os.environ.get("OPENAI_API_KEY"):
-            print(f"\n--- Self-Correction Evaluation ---")
-            run_self_correction_eval(
-                data_path=generation_output,
-                output_path=self_correction_output,
-                model=args.llm_judge_model,
-                max_workers=args.llm_judge_workers,
-                sample_size=args.llm_judge_sample_size,
-            )
 
     print(f"\n{'='*50}")
     print("=== Final Summary ===")
