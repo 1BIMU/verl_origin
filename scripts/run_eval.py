@@ -22,6 +22,20 @@ DATASET_REGISTRY = {
     "aime": "data/offline_eval/math__aime_repeated_8x_240.parquet",
 }
 
+# 代码类数据集，需要更长的 prompt/response
+CODE_DATASETS = {"humaneval", "mbpp", "livecodebench", "bigcodebench"}
+
+
+def is_code_dataset(name):
+    """检测是否为代码类数据集"""
+    name_lower = name.lower()
+    if name_lower in CODE_DATASETS:
+        return True
+    # 支持路径形式的数据集名称
+    if "code" in name_lower or "humaneval" in name_lower or "mbpp" in name_lower:
+        return True
+    return False
+
 
 def get_dataset_path(name):
     if name in DATASET_REGISTRY:
@@ -29,7 +43,7 @@ def get_dataset_path(name):
     return os.path.expanduser(name)
 
 
-def run_generation(model_path, data_path, output_path, n_samples, n_gpus, batch_size, temperature, response_length, prompt_length):
+def run_generation(model_path, data_path, output_path, n_samples, n_gpus, batch_size, temperature, response_length, prompt_length, gpu_memory_utilization=0.5):
     cmd = [
         sys.executable, "-m", "verl.trainer.main_generation",
         f"model.path={model_path}",
@@ -41,6 +55,7 @@ def run_generation(model_path, data_path, output_path, n_samples, n_gpus, batch_
         f"rollout.temperature={temperature}",
         f"rollout.prompt_length={prompt_length}",
         f"rollout.response_length={response_length}",
+        f"rollout.gpu_memory_utilization={gpu_memory_utilization}",
         "+rollout.pipeline_model_parallel_size=1",
     ]
     print(f"Running: {' '.join(cmd)}")
@@ -109,6 +124,7 @@ def main():
     parser.add_argument("--sandbox_url", type=str, default=None, help="Sandbox URL for code execution")
     parser.add_argument("--skip_generation", action="store_true")
     parser.add_argument("--skip_accuracy", action="store_true")
+    parser.add_argument("--gpu_memory_utilization", type=float, default=0.5)
     args = parser.parse_args()
 
     model_name = os.path.basename(args.model_path.rstrip("/"))
@@ -136,6 +152,17 @@ def main():
         safe_name = dataset_name.replace("/", "_").replace("~", "")
         generation_output = os.path.join(output_dir, f"{safe_name}_generation.parquet")
 
+        # 根据数据集类型自动调整参数
+        if is_code_dataset(dataset_name):
+            prompt_length = max(args.prompt_length, 2048)
+            response_length = max(args.response_length, 16384)
+            gpu_memory_utilization = max(args.gpu_memory_utilization, 0.8)
+            print(f"[Auto] Code dataset detected, using: prompt_length={prompt_length}, response_length={response_length}, gpu_memory_utilization={gpu_memory_utilization}")
+        else:
+            prompt_length = args.prompt_length
+            response_length = args.response_length
+            gpu_memory_utilization = args.gpu_memory_utilization
+
         if not args.skip_generation:
             print(f"\n--- Generation ---")
             run_generation(
@@ -146,8 +173,9 @@ def main():
                 n_gpus=args.n_gpus,
                 batch_size=args.batch_size,
                 temperature=args.temperature,
-                response_length=args.response_length,
-                prompt_length=args.prompt_length,
+                response_length=response_length,
+                prompt_length=prompt_length,
+                gpu_memory_utilization=gpu_memory_utilization,
             )
 
         if not args.skip_accuracy:
