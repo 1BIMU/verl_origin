@@ -92,13 +92,19 @@ def process_dataset(input_path, output_path, model="gpt-4o", max_workers=10, sam
 
     tasks = []
     for idx, row in df.iterrows():
-        question = row.get("extra_info", {}).get("question", "")
+        # 安全获取 extra_info 和 question
+        extra_info = row.get("extra_info")
+        if isinstance(extra_info, dict):
+            question = extra_info.get("question", "")
+        else:
+            question = ""
+
         if not question and "prompt" in row:
             prompt = row["prompt"]
             # prompt 可能是 list 或 numpy.ndarray
             if hasattr(prompt, "tolist"):
                 prompt = prompt.tolist()
-            if isinstance(prompt, list) and len(prompt) > 0:
+            if isinstance(prompt, list) and len(prompt) > 0 and isinstance(prompt[0], dict):
                 question = prompt[0].get("content", "")
 
         responses = row.get("responses", [])
@@ -107,9 +113,21 @@ def process_dataset(input_path, output_path, model="gpt-4o", max_workers=10, sam
             responses = []
         if hasattr(responses, "tolist"):
             responses = responses.tolist()
-        ground_truth = row.get("reward_model", {}).get("ground_truth", "")
+
+        # 安全获取 ground_truth
+        reward_model = row.get("reward_model")
+        if isinstance(reward_model, dict):
+            ground_truth = reward_model.get("ground_truth", "")
+        else:
+            ground_truth = ""
 
         for resp_idx, response in enumerate(responses):
+            # 确保 response 是字符串
+            if response is None:
+                response = ""
+            elif not isinstance(response, str):
+                response = str(response)
+
             tasks.append({
                 "idx": idx,
                 "resp_idx": resp_idx,

@@ -3,13 +3,15 @@
 端到端的 self-correction 评测脚本
 1. 调用 main_generation.py 生成模型回答
 2. 调用 llm_judge_self_correction.py 进行 self-correction 评测
+
+支持异步模式：生成完一个模型后立即提交 judge 任务，然后继续生成下一个模型
 """
 
 import argparse
 import os
 import subprocess
 import sys
-from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor
 
 
 # 默认数据集路径
@@ -70,6 +72,7 @@ def run_self_correction_eval(
     ]
     print(f"Running self-correction evaluation: {' '.join(cmd)}")
     subprocess.run(cmd, check=True)
+    return output_path
 
 
 def main():
@@ -97,10 +100,10 @@ def main():
     # 控制参数
     parser.add_argument("--skip_generation", action="store_true", help="跳过生成步骤")
     parser.add_argument("--skip_judge", action="store_true", help="跳过评测步骤")
+    parser.add_argument("--sync_judge", action="store_true", help="同步执行 judge（默认异步：生成完一个模型立即提交 judge，继续生成下一个）")
 
     args = parser.parse_args()
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_dir = os.path.expanduser(args.output_dir)
     os.makedirs(output_dir, exist_ok=True)
 
@@ -112,58 +115,87 @@ def main():
     print(f"Output: {output_dir}")
     print(f"n_samples: {args.n_samples}, temperature: {args.temperature}")
     print(f"max_num_batched_tokens: {args.max_num_batched_tokens}")
+    print(f"Sync judge: {args.sync_judge}")
     print("=" * 60)
 
     all_results = {}
+    judge_futures = {}  # model_name -> future
 
-    for model_path in args.model_paths:
-        model_name = os.path.basename(model_path.rstrip("/"))
-        print(f"\n{'=' * 50}")
-        print(f"Processing: {model_name}")
-        print(f"{'=' * 50}")
+    # 使用线程池异步执行 judge 任务
+    with ThreadPoolExecutor(max_workers=len(args.model_paths)) as executor:
+        for model_path in args.model_paths:
+            model_name = os.path.basename(model_path.rstrip("/"))
+            print(f"\n{'=' * 50}")
+            print(f"Processing: {model_name}")
+            print(f"{'=' * 50}")
 
-        model_output_dir = os.path.join(output_dir, model_name)
-        os.makedirs(model_output_dir, exist_ok=True)
+            model_output_dir = os.path.join(output_dir, model_name)
+            os.makedirs(model_output_dir, exist_ok=True)
 
-        generation_output = os.path.join(model_output_dir, "generation.parquet")
-        judge_output = os.path.join(model_output_dir, "self_correction_analysis.json")
+            generation_output = os.path.join(model_output_dir, "generation.parquet")
+            judge_output = os.path.join(model_output_dir, "self_correction_analysis.json")
 
-        # Step 1: Generation
-        if not args.skip_generation:
-            print(f"\n--- Step 1: Generation ---")
-            run_generation(
-                model_path=model_path,
-                data_path=args.dataset,
-                output_path=generation_output,
-                n_samples=args.n_samples,
-                n_gpus=args.n_gpus,
-                batch_size=args.batch_size,
-                temperature=args.temperature,
-                prompt_length=args.prompt_length,
-                response_length=args.response_length,
-                gpu_memory_utilization=args.gpu_memory_utilization,
-                max_num_batched_tokens=args.max_num_batched_tokens,
-                max_model_len=args.max_model_len,
-                tensor_parallel_size=args.tensor_parallel_size,
-            )
-        else:
-            print(f"\n--- Step 1: Generation (skipped) ---")
-
-        # Step 2: Self-Correction Evaluation
-        if not args.skip_judge:
-            print(f"\n--- Step 2: Self-Correction Evaluation ---")
-            if os.path.exists(generation_output):
-                run_self_correction_eval(
-                    input_path=generation_output,
-                    output_path=judge_output,
-                    judge_model=args.judge_model,
-                    max_workers=args.max_workers,
+            # Step 1: Generation (同步，因为需要 GPU)
+            if not args.skip_generation:
+                print(f"\n--- Step 1: Generation ---")
+                run_generation(
+                    model_path=model_path,
+                    data_path=args.dataset,
+                    output_path=generation_output,
+                    n_samples=args.n_samples,
+                    n_gpus=args.n_gpus,
+                    batch_size=args.batch_size,
+                    temperature=args.temperature,
+                    prompt_length=args.prompt_length,
+                    response_length=args.response_length,
+                    gpu_memory_utilization=args.gpu_memory_utilization,
+                    max_num_batched_tokens=args.max_num_batched_tokens,
+                    max_model_len=args.max_model_len,
+                    tensor_parallel_size=args.tensor_parallel_size,
                 )
-                all_results[model_name] = judge_output
+            else:
+                print(f"\n--- Step 1: Generation (skipped) ---")
+
+            # Step 2: Self-Correction Evaluation
+            if not args.skip_judge and os.path.exists(generation_output):
+                if not args.sync_judge:
+                    # 默认异步提交 judge 任务
+                    print(f"\n--- Step 2: Submitting judge task (async) ---")
+                    future = executor.submit(
+                        run_self_correction_eval,
+                        input_path=generation_output,
+                        output_path=judge_output,
+                        judge_model=args.judge_model,
+                        max_workers=args.max_workers,
+                    )
+                    judge_futures[model_name] = (future, judge_output)
+                else:
+                    # 同步执行 judge
+                    print(f"\n--- Step 2: Self-Correction Evaluation (sync) ---")
+                    run_self_correction_eval(
+                        input_path=generation_output,
+                        output_path=judge_output,
+                        judge_model=args.judge_model,
+                        max_workers=args.max_workers,
+                    )
+                    all_results[model_name] = judge_output
+            elif args.skip_judge:
+                print(f"\n--- Step 2: Self-Correction Evaluation (skipped) ---")
             else:
                 print(f"Warning: {generation_output} not found, skipping evaluation")
-        else:
-            print(f"\n--- Step 2: Self-Correction Evaluation (skipped) ---")
+
+        # 等待所有异步 judge 任务完成
+        if not args.sync_judge and judge_futures:
+            print(f"\n{'=' * 50}")
+            print("Waiting for async judge tasks to complete...")
+            print(f"{'=' * 50}")
+            for model_name, (future, judge_output) in judge_futures.items():
+                try:
+                    future.result()  # 等待完成
+                    all_results[model_name] = judge_output
+                    print(f"[Done] {model_name}: {judge_output}")
+                except Exception as e:
+                    print(f"[Error] {model_name}: {e}")
 
     print(f"\n{'=' * 60}")
     print("=== Pipeline Complete ===")
