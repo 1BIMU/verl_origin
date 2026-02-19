@@ -20,6 +20,9 @@ DATASET_REGISTRY = {
     "bigcodebench": "data/offline_eval/code__bigcodebench.parquet",
     "math500": "data/offline_eval/math__math_500.parquet",
     "aime": "data/offline_eval/math__aime_repeated_8x_240.parquet",
+    "aime2025": "data/offline_eval/math__aime2025_2025.parquet",
+    "amc23": "data/offline_eval/math__amc23_2025.parquet",
+    "minerva_math": "data/offline_eval/math__minerva_math_2025_processed.parquet",
 }
 
 # 代码类数据集，需要更长的 prompt/response
