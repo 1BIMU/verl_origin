@@ -26,6 +26,8 @@ def run_generation(
     n_gpus: int,
     batch_size: int,
     temperature: float,
+    top_p: float,
+    top_k: int,
     prompt_length: int,
     response_length: int,
     gpu_memory_utilization: float,
@@ -43,6 +45,8 @@ def run_generation(
         f"data.batch_size={batch_size}",
         f"trainer.n_gpus_per_node={n_gpus}",
         f"rollout.temperature={temperature}",
+        f"rollout.top_p={top_p}",
+        f"rollout.top_k={top_k}",
         f"rollout.prompt_length={prompt_length}",
         f"rollout.response_length={response_length}",
         f"rollout.gpu_memory_utilization={gpu_memory_utilization}",
@@ -86,6 +90,8 @@ def main():
     parser.add_argument("--n_gpus", type=int, default=4, help="GPU 数量")
     parser.add_argument("--batch_size", type=int, default=128, help="batch size")
     parser.add_argument("--temperature", type=float, default=0.6, help="采样温度")
+    parser.add_argument("--top_p", type=float, default=1.0, help="top-p 采样 (与训练对齐，默认不限制)")
+    parser.add_argument("--top_k", type=int, default=-1, help="top-k 采样 (与训练对齐，-1 表示不限制)")
     parser.add_argument("--prompt_length", type=int, default=512, help="最大 prompt 长度")
     parser.add_argument("--response_length", type=int, default=8192, help="最大 response 长度")
     parser.add_argument("--gpu_memory_utilization", type=float, default=0.8, help="GPU 显存利用率")
@@ -146,6 +152,8 @@ def main():
                     n_gpus=args.n_gpus,
                     batch_size=args.batch_size,
                     temperature=args.temperature,
+                    top_p=args.top_p,
+                    top_k=args.top_k,
                     prompt_length=args.prompt_length,
                     response_length=args.response_length,
                     gpu_memory_utilization=args.gpu_memory_utilization,

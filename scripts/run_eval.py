@@ -46,7 +46,7 @@ def get_dataset_path(name):
     return os.path.expanduser(name)
 
 
-def run_generation(model_path, data_path, output_path, n_samples, n_gpus, batch_size, temperature, response_length, prompt_length, gpu_memory_utilization=0.5):
+def run_generation(model_path, data_path, output_path, n_samples, n_gpus, batch_size, temperature, top_p, top_k, response_length, prompt_length, gpu_memory_utilization=0.5):
     cmd = [
         sys.executable, "-m", "verl.trainer.main_generation",
         f"model.path={model_path}",
@@ -56,6 +56,8 @@ def run_generation(model_path, data_path, output_path, n_samples, n_gpus, batch_
         f"data.batch_size={batch_size}",
         f"trainer.n_gpus_per_node={n_gpus}",
         f"rollout.temperature={temperature}",
+        f"rollout.top_p={top_p}",
+        f"rollout.top_k={top_k}",
         f"rollout.prompt_length={prompt_length}",
         f"rollout.response_length={response_length}",
         f"rollout.gpu_memory_utilization={gpu_memory_utilization}",
@@ -122,6 +124,8 @@ def main():
     parser.add_argument("--n_gpus", type=int, default=8)
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--temperature", type=float, default=0.6)
+    parser.add_argument("--top_p", type=float, default=1.0, help="top-p 采样 (与训练对齐，默认不限制)")
+    parser.add_argument("--top_k", type=int, default=-1, help="top-k 采样 (与训练对齐，-1 表示不限制)")
     parser.add_argument("--prompt_length", type=int, default=1024)
     parser.add_argument("--response_length", type=int, default=8192)
     parser.add_argument("--sandbox_url", type=str, default=None, help="Sandbox URL for code execution")
@@ -176,6 +180,8 @@ def main():
                 n_gpus=args.n_gpus,
                 batch_size=args.batch_size,
                 temperature=args.temperature,
+                top_p=args.top_p,
+                top_k=args.top_k,
                 response_length=response_length,
                 prompt_length=prompt_length,
                 gpu_memory_utilization=gpu_memory_utilization,
