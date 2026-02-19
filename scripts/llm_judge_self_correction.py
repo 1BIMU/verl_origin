@@ -76,8 +76,11 @@ def analyze_response(client, model, question, response, ground_truth, max_retrie
     return {"self_correction_count": -1, "corrections": [], "overall_assessment": "Max retries exceeded", "error": "Max retries exceeded"}
 
 
-def process_dataset(input_path, output_path, model="gpt-4o-mini", max_workers=10, sample_size=None):
-    client = OpenAI()
+def process_dataset(input_path, output_path, model="gpt-4o", max_workers=10, sample_size=None, api_base=None, api_key=None):
+    client = OpenAI(
+        base_url=api_base,
+        api_key=api_key,
+    )
     df = pd.read_parquet(input_path)
 
     if sample_size:
@@ -181,9 +184,11 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_path", type=str, required=True)
     parser.add_argument("--output_path", type=str, default="./output/self_correction_analysis.json")
-    parser.add_argument("--model", type=str, default="gpt-4o-mini")
-    parser.add_argument("--max_workers", type=int, default=10)
+    parser.add_argument("--model", type=str, default="gpt-4o")
+    parser.add_argument("--max_workers", type=int, default=32)
     parser.add_argument("--sample_size", type=int, default=None)
+    parser.add_argument("--api_base", type=str, default='https://api.ai-gaochao.cn/v1', help="API base URL (e.g., https://api.openai.com/v1)")
+    parser.add_argument("--api_key", type=str, default='sk-zaCd8xg5am8ioEPiA1CdD1946dF54e8e9c93428a34EaEc5b', help="API key (默认使用 OPENAI_API_KEY 环境变量)")
     args = parser.parse_args()
 
     process_dataset(
@@ -192,6 +197,8 @@ def main():
         model=args.model,
         max_workers=args.max_workers,
         sample_size=args.sample_size,
+        api_base=args.api_base,
+        api_key=args.api_key,
     )
 
 
