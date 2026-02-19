@@ -1,6 +1,5 @@
 
 set -ex
-curl -LsSf https://astral.sh/uv/install.sh | sh
 export PATH="$HOME/.local/bin:$PATH"
 uv venv uv_verl --python 3.10
 source uv_verl/bin/activate
