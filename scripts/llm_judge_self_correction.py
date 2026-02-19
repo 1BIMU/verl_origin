@@ -102,6 +102,11 @@ def process_dataset(input_path, output_path, model="gpt-4o", max_workers=10, sam
                 question = prompt[0].get("content", "")
 
         responses = row.get("responses", [])
+        # responses 可能是 None 或 numpy.ndarray
+        if responses is None:
+            responses = []
+        if hasattr(responses, "tolist"):
+            responses = responses.tolist()
         ground_truth = row.get("reward_model", {}).get("ground_truth", "")
 
         for resp_idx, response in enumerate(responses):
@@ -156,9 +161,14 @@ def process_dataset(input_path, output_path, model="gpt-4o", max_workers=10, sam
     for result in results:
         source = result["data_source"]
         if source not in by_source:
-            by_source[source] = {"count": 0, "total_corrections": 0, "successful_corrections": 0}
+            by_source[source] = {"count": 0, "total_corrections": 0, "successful_corrections": 0, "errors": 0}
         by_source[source]["count"] += 1
-        by_source[source]["total_corrections"] += result.get("self_correction_count", 0)
+        # 只统计有效的 self_correction_count (>= 0)
+        count = result.get("self_correction_count", 0)
+        if count >= 0:
+            by_source[source]["total_corrections"] += count
+        else:
+            by_source[source]["errors"] += 1
         for correction in result.get("corrections", []):
             if correction.get("successful", False):
                 by_source[source]["successful_corrections"] += 1
