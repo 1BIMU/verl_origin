@@ -55,6 +55,7 @@ def run_generation(
         f"rollout.tensor_model_parallel_size={tensor_parallel_size}",
         f"rollout.do_sample=True",
         f"rollout.enforce_eager=True",
+        "+rollout.pipeline_model_parallel_size=1",
     ]
     print(f"Running generation: {' '.join(cmd)}")
     subprocess.run(cmd, check=True)
