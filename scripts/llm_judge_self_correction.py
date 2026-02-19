@@ -95,6 +95,9 @@ def process_dataset(input_path, output_path, model="gpt-4o", max_workers=10, sam
         question = row.get("extra_info", {}).get("question", "")
         if not question and "prompt" in row:
             prompt = row["prompt"]
+            # prompt 可能是 list 或 numpy.ndarray
+            if hasattr(prompt, "tolist"):
+                prompt = prompt.tolist()
             if isinstance(prompt, list) and len(prompt) > 0:
                 question = prompt[0].get("content", "")
 
